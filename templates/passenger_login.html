@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card" style="max-width: 400px; margin: 50px auto;">
+    <h3 style="text-align: center; margin-bottom: 20px;">Passenger Portal Login</h3>
+    <p style="text-align: center; color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Enter your CNIC to receive a secure login code via email.</p>
+    
+    <form method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>CNIC Number (Include dashes)</label>
+            <input type="text" name="cnic" placeholder="35202-1234567-1" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Send Verification Code</button>
+    </form>
+    
+    <div style="text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-gray);">
+        <a href="{% url 'login' %}" style="color: var(--text-muted); font-size: 12px; text-decoration: none;">Are you an employee? Staff Login</a>
+    </div>
+</div>
+{% endblock %}

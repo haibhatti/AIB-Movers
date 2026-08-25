@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="margin-bottom: 25px; border-bottom: 1px solid var(--border-gray); padding-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-end;">
+    <div>
+        <h2 style="margin: 0;">Fleet Management & Live Tracking</h2>
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-outline" style="margin-top: 10px; font-size: 11px; padding: 4px 8px;">&larr; Back to Dashboard</a>
+    </div>
+</div>
+
+<div class="flex-row" style="gap: 20px; margin-bottom: 20px;">
+    <!--Dynamic Bus Reassignment with Profitability Insights -->
+    <div class="card flex-col" style="flex: 2; padding: 0;">
+        <h4 style="padding: 15px; margin: 0; border-bottom: 1px solid var(--border-gray);">Active Trips: Bus Reassignment</h4>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%;">
+                <thead style="background: #edf2f7; cursor: pointer;">
+                    <tr>
+                        <th>Trip Route</th>
+                        <th>Route Financials (All-Time)</th>
+                        <th>Date & Time</th>
+                        <th>Current Bus</th>
+                        <th>Reassign Fleet</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for trip in active_trips %}
+                    <tr>
+                        <td><strong>{{ trip.route.route_number }}</strong><br><small style="color: var(--text-muted);">{{ trip.route.origin }} to {{ trip.route.destination }}</small></td>
+                        
+                        <!--Detailed Financial Breakdown -->
+                        <td style="font-size: 12px; line-height: 1.4;">
+                            <span style="color: var(--text-muted); display: inline-block; width: 30px;">Rev:</span> <strong>Rs. {{ trip.historical_revenue }}</strong><br>
+                            <span style="color: var(--text-muted); display: inline-block; width: 30px;">Exp:</span> <strong style="color: var(--danger);">Rs. {{ trip.historical_expense }}</strong><br>
+                            <span style="color: var(--text-muted); display: inline-block; width: 30px;">Net:</span> 
+                            {% if trip.historical_profit > 0 %}
+                                <strong style="color: var(--success);">+Rs. {{ trip.historical_profit }}</strong>
+                            {% elif trip.historical_profit < 0 %}
+                                <strong style="color: var(--danger);">Rs. {{ trip.historical_profit }}</strong>
+                            {% else %}
+                                <strong style="color: var(--text-muted);">Rs. 0.00</strong>
+                            {% endif %}
+                        </td>
+                        
+                        <td>{{ trip.date|date:"M d, Y" }}<br><strong>{{ trip.departure_time|time:"g:i A" }}</strong></td>
+                        <td>{{ trip.bus.bus_name }}<br><small style="color: var(--text-muted);">Cap: {{ trip.bus.total_seats }} Seats</small></td>
+                        <td>
+                            <form method="POST" style="margin: 0; display: flex; gap: 5px;">
+                                {% csrf_token %}
+                                <input type="hidden" name="reassign_bus" value="1">
+                                <input type="hidden" name="trip_id" value="{{ trip.id }}">
+                                <select name="new_bus_id" required style="padding: 4px; font-size: 11px; width: 120px;">
+                                    <option value="">Select New Bus...</option>
+                                    {% for bus in available_buses %}
+                                        {% if bus.id != trip.bus.id %}
+                                            <option value="{{ bus.id }}">{{ bus.bus_name }} ({{ bus.total_seats }}s)</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-primary" style="padding: 4px 8px; font-size: 11px;">Update</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">No active trips require management.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!--Waypoint Tracking -->
+    <div class="card flex-col" style="flex: 1; padding: 0; max-height: 500px; overflow-y: auto;">
+        <h4 style="padding: 15px; margin: 0; border-bottom: 1px solid var(--border-gray);">Live GPS / Rest Stop Pings</h4>
+        <table style="width: 100%;">
+            <thead style="background: #edf2f7; cursor: pointer;">
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Location Update</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in live_tracking %}
+                <tr>
+                    <td style="font-size: 11px;"><strong>{{ log.timestamp|time:"g:i A" }}</strong><br>{{ log.timestamp|date:"M d" }}</td>
+                    <td style="font-size: 12px;">
+                        <span style="color: var(--primary-navy); font-weight: bold;">{{ log.trip.route.route_number }}</span><br>
+                        Arrived: <span style="color: var(--success); font-weight: bold;">{{ log.location_name }}</span><br>
+                       
+                        <small style="color: var(--text-muted);">
+                            {% if log.logged_by %}
+                                By: {{ log.logged_by.user.full_name }}
+                            {% else %}
+                                By: System Tracking
+                            {% endif %}
+                        </small>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="2" style="text-align: center; color: var(--text-muted); padding: 20px;">No tracking signals received.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Fleet Registry -->
+<div class="card" style="padding: 0;">
+    <h4 style="padding: 15px; margin: 0; border-bottom: 1px solid var(--border-gray);">Fleet Registry (Edit Vehicles)</h4>
+    <div style="overflow-x: auto;">
+        <table style="width: 100%;">
+            <thead style="background: #edf2f7; cursor: pointer;">
+                <tr>
+                    <th>Bus Identity (Name)</th>
+                    <th>Total Seats</th>
+                    <th>Operational Status</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bus in all_buses %}
+                <tr {% if not bus.is_active %}style="opacity: 0.6;"{% endif %}>
+                    <td><input type="text" form="bus_form_{{ bus.id }}" name="bus_name" value="{{ bus.bus_name }}" required style="padding: 6px; font-size: 12px; width: 100%; box-sizing: border-box;"></td>
+                    <td><span style="font-size: 13px; font-weight: bold; color: var(--text-muted);">{{ bus.total_seats }}</span></td>
+                    <td>
+                        <label style="display: flex; align-items: center; gap: 5px; font-size: 12px; margin: 0; cursor: pointer;">
+                            <input type="checkbox" form="bus_form_{{ bus.id }}" name="is_active" {% if bus.is_active %}checked{% endif %} style="width: auto;"> 
+                            {% if bus.is_active %}<span style="color: var(--success); font-weight: bold;">Active</span>{% else %}<span style="color: var(--danger); font-weight: bold;">Inactive</span>{% endif %}
+                        </label>
+                    </td>
+                    <td style="text-align: right;"><button type="submit" form="bus_form_{{ bus.id }}" class="btn btn-outline" style="padding: 5px 10px; font-size: 11px;">Save Changes</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div style="display: none;">
+    {% for bus in all_buses %}
+    <form id="bus_form_{{ bus.id }}" method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="update_bus" value="1">
+        <input type="hidden" name="bus_id" value="{{ bus.id }}">
+    </form>
+    {% endfor %}
+</div>
+{% endblock %}

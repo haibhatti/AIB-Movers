@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .tab-link { padding: 10px 0; text-decoration: none; margin-right: 20px; }
+    .tab-active { color: var(--primary-navy); font-weight: bold; border-bottom: 3px solid var(--primary-navy); }
+    .tab-inactive { color: var(--text-muted); }
+    .row-cancelled { opacity: 0.6; }
+</style>
+
+<h2>All Booking Records</h2>
+
+<div style="border-bottom: 1px solid var(--border-gray); margin-bottom: 20px; display: flex; gap: 10px;">
+    <a href="?status=all&q={{ query }}" class="tab-link {% if status_filter == 'all' %}tab-active{% else %}tab-inactive{% endif %}">All Records</a>
+    <a href="?status=active&q={{ query }}" class="tab-link {% if status_filter == 'active' %}tab-active{% else %}tab-inactive{% endif %}">Active / Confirmed</a>
+    <a href="?status=pending_payment&q={{ query }}" class="tab-link {% if status_filter == 'pending_payment' %}tab-active{% else %}tab-inactive{% endif %}">Pending Payments</a>
+    <a href="?status=refund_requested&q={{ query }}" class="tab-link {% if status_filter == 'refund_requested' %}tab-active{% else %}tab-inactive{% endif %}">Refund Queue</a>
+    <a href="?status=cancelled&q={{ query }}" class="tab-link {% if status_filter == 'cancelled' %}tab-active{% else %}tab-inactive{% endif %}">Cancelled</a>
+</div>
+
+<form method="get" style="display: flex; gap: 10px; margin-bottom: 20px; max-width: 500px;">
+    <input type="text" name="q" placeholder="Search by PNR, CNIC, Name..." value="{{ query }}">
+    <button type="submit" class="btn btn-outline">Search</button>
+    {% if query %}<a href="{% url 'view_bookings' %}?status={{ status_filter }}" class="btn btn-outline" style="border: none; color: var(--text-muted);">Clear</a>{% endif %}
+</form>
+
+<div class="card" style="padding: 0; overflow: auto;">
+    <table>
+        <thead>
+            <tr>
+                <th>PNR</th>
+                <th>Passenger Identity</th>
+                <th>Trip Details</th>
+                <th>Fare</th>
+                <th>Status</th>
+                <th>Payment</th>
+                <th style="text-align: right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in tickets %}
+            <tr class="{% if 'CANCELLED' in t.ticket_status %}row-cancelled{% endif %}">
+                <td><strong>{{ t.pnr_number }}</strong></td>
+                <td>{{ t.passenger.full_name }}<br><small style="color: var(--text-muted);">{{ t.passenger.cnic }} | {{ t.passenger.phone }}</small></td>
+                <td>Seat #{{ t.seat_number }}<br><small style="color: var(--text-muted);">{{ t.origin }} to {{ t.destination }}</small></td>
+                <td>Rs. {{ t.fare_paid }}</td>
+                <td>
+                    {% if t.ticket_status == 'CONFIRMED' %}<span style="color: var(--success); font-weight: bold; font-size: 12px;">{{ t.get_ticket_status_display }}</span>
+                    {% elif 'CANCELLED' in t.ticket_status %}<span style="color: var(--danger); font-weight: bold; font-size: 12px;">{{ t.get_ticket_status_display }}</span>
+                    {% else %}<span style="color: var(--text-muted); font-weight: bold; font-size: 12px;">{{ t.get_ticket_status_display }}</span>{% endif %}
+                </td>
+                <td>
+                    {% if 'PAID' in t.payment_status %}<span style="color: var(--success); font-weight: bold; font-size: 12px;">{{ t.get_payment_status_display }}</span>
+                    {% elif 'REFUND' in t.payment_status %}<span style="color: var(--primary-navy); font-weight: bold; font-size: 12px;">{{ t.get_payment_status_display }}</span>
+                    {% else %}<span style="color: var(--warning); font-weight: bold; font-size: 12px;">{{ t.get_payment_status_display }}</span>{% endif %}
+                </td>
+                <td style="text-align: right;">
+                    <form method="post" style="display: inline-block; margin: 0;">
+                        {% csrf_token %}
+                        <input type="hidden" name="ticket_id" value="{{ t.id }}">
+                        
+                        {% if user.employee_profile.role == 'ADMIN' or user.employee_profile.role == 'AGENT' or user.employee_profile.role == 'SUPPORT' %}
+                            {% if 'CANCELLED' not in t.ticket_status %}
+                                {% if t.payment_status == 'PENDING_TERMINAL' %}<button type="submit" name="action" value="mark_paid" class="btn btn-success" style="padding: 4px 8px; font-size: 11px;">Collect Cash</button>{% endif %}
+                                {% if t.payment_status == 'PENDING_ONLINE' %}<button type="submit" name="action" value="mark_paid_online" class="btn btn-success" style="padding: 4px 8px; font-size: 11px;">Verify Transfer</button>{% endif %}
+                            {% endif %}
+                            {% if t.payment_status == 'REFUND_REQUESTED' %}
+                                <button type="submit" name="action" value="process_refund" class="btn btn-primary" style="padding: 4px 8px; font-size: 11px;">Approve Refund</button>
+                            {% endif %}
+                        {% endif %}
+                    </form>
+                    
+                    {% if 'CANCELLED' not in t.ticket_status %}
+                        {% if user.employee_profile.role == 'ADMIN' or user.employee_profile.role == 'AGENT' or user.employee_profile.role == 'SUPPORT' %}
+                            <a href="{% url 'edit_ticket' t.id %}" class="btn btn-outline" style="padding: 4px 8px; font-size: 11px;">Edit</a>
+                            <a href="{% url 'delete_ticket' t.id %}" class="btn btn-danger" style="padding: 4px 8px; font-size: 11px;">Cancel</a>
+                        {% endif %}
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">No booking records found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

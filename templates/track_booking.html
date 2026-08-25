@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="margin-bottom: 25px; border-bottom: 1px solid var(--border-gray); padding-bottom: 15px;">
+    <h2 style="margin: 0;">Track Booking</h2>
+    <span style="color: var(--text-muted); font-size: 14px;">View live status, download receipts, or cancel reservations.</span>
+</div>
+
+<div class="card" style="max-width: 600px;">
+    <form method="post">
+        {% csrf_token %}
+        <div class="flex-row">
+            <div class="form-group flex-col">
+                <label>PNR Number</label>
+                <input type="text" name="pnr_number" placeholder="e.g., A1B2C3D4" maxlength="8" required style="text-transform: uppercase;">
+            </div>
+            <div class="form-group flex-col">
+                <label>Passenger CNIC</label>
+                <input type="text" name="passenger_cnic" placeholder="35202-1234567-1" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Track Status</button>
+    </form>
+</div>
+
+{% if ticket %}
+    <div class="card" style="max-width: 600px; border-top: 4px solid var(--primary-navy);">
+        <h4 style="margin-bottom: 15px; border-bottom: 1px solid var(--border-gray); padding-bottom: 10px;">Booking Details</h4>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; font-size: 14px;">
+            <div><span style="color: var(--text-muted); text-transform: uppercase; font-size: 11px; font-weight: bold; display: block;">PNR</span> <strong>{{ ticket.pnr_number }}</strong></div>
+            <div><span style="color: var(--text-muted); text-transform: uppercase; font-size: 11px; font-weight: bold; display: block;">Passenger</span> {{ ticket.passenger.full_name }}</div>
+            <div><span style="color: var(--text-muted); text-transform: uppercase; font-size: 11px; font-weight: bold; display: block;">Seat</span> #{{ ticket.seat_number }}</div>
+            <div><span style="color: var(--text-muted); text-transform: uppercase; font-size: 11px; font-weight: bold; display: block;">Route</span> {{ ticket.origin }} to {{ ticket.destination }}</div>
+            <div><span style="color: var(--text-muted); text-transform: uppercase; font-size: 11px; font-weight: bold; display: block;">Status</span> <span style="color: var(--primary-navy); font-weight: bold;">{{ ticket.get_ticket_status_display }}</span></div>
+            <div><span style="color: var(--text-muted); text-transform: uppercase; font-size: 11px; font-weight: bold; display: block;">Payment</span> <span style="font-weight: bold;">{{ ticket.get_payment_status_display }}</span></div>
+        </div>
+        
+        {% if ticket.ticket_status == 'RESERVED' or ticket.ticket_status == 'CONFIRMED' %}
+            <form method="post" action="{% url 'cancel_booking_passenger' ticket.pnr_number %}" style="margin: 0; border-top: 1px solid var(--border-gray); padding-top: 15px;">
+                {% csrf_token %}
+                <input type="hidden" name="cnic" value="{{ ticket.passenger.cnic }}">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel this reservation?');">Cancel Booking</button>
+            </form>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+  
+    .receipt-wrapper {
+        max-width: 700px;
+        margin: 40px auto;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        color: #333;
+        line-height: 1.5;
+    }
+    .receipt-title {
+        font-size: 24px;
+        font-weight: normal;
+        margin-bottom: 5px;
+        color: #2c3e50;
+    }
+    .receipt-subtitle {
+        font-size: 14px;
+        color: #7f8c8d;
+        margin-bottom: 30px;
+    }
+    .receipt-card {
+        border: 1px solid #dcdde1;
+        background: #fff;
+    }
+    .receipt-header {
+        background: #f5f6fa;
+        border-bottom: 1px solid #dcdde1;
+        padding: 16px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .receipt-header h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 500;
+        color: #2f3640;
+    }
+    .pnr-highlight {
+        font-weight: bold;
+        font-size: 16px;
+        color: #2f3640;
+    }
+    .receipt-body {
+        padding: 30px 24px;
+    }
+    .receipt-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 35px;
+    }
+    .section-title {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: bold;
+        color: #7f8c8d;
+        border-bottom: 1px solid #ecf0f1;
+        padding-bottom: 6px;
+        margin-bottom: 15px;
+    }
+    .info-row {
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+    .info-label {
+        font-weight: bold;
+        display: inline-block;
+        width: 80px;
+        color: #2f3640;
+    }
+    .timeline-list {
+        list-style: none;
+        padding-left: 12px;
+        margin: 0;
+        border-left: 2px solid #bdc3c7;
+    }
+    .timeline-item {
+        position: relative;
+        padding-left: 18px;
+        margin-bottom: 14px;
+        font-size: 14px;
+    }
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -17px; /* Centers the dot on the 2px border */
+        top: 5px;
+        width: 8px;
+        height: 8px;
+        background: #fff;
+        border: 2px solid #95a5a6;
+        border-radius: 50%;
+    }
+    .timeline-item.origin::before, .timeline-item.dest::before {
+        border-color: #2c3e50;
+        background: #2c3e50;
+    }
+    .support-box {
+        background: #f8f9fa;
+        border: 1px solid #ecf0f1;
+        padding: 18px;
+        font-size: 13px;
+        color: #2f3640;
+    }
+    .action-links {
+        margin-top: 25px;
+    }
+    .btn-home {
+        display: inline-block;
+        padding: 10px 24px;
+        background: #fff;
+        border: 1px solid #2f3640;
+        color: #2f3640;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: background 0.2s, color 0.2s;
+    }
+    .btn-home:hover {
+        background: #2f3640;
+        color: #fff;
+    }
+</style>
+
+<div class="receipt-wrapper">
+    <h2 class="receipt-title">Booking Confirmed</h2>
+    <p class="receipt-subtitle">Your reservation has been secured successfully.</p>
+
+    <div class="receipt-card">
+        <div class="receipt-header">
+            <h3>E-Ticket Receipt</h3>
+            <span class="pnr-highlight">PNR: {{ ticket.pnr_number }}</span>
+        </div>
+        
+        <div class="receipt-body">
+            
+            <div class="receipt-grid">
+                <div>
+                    <div class="section-title">Passenger Details</div>
+                    <div class="info-row"><span class="info-label">Name:</span> {{ ticket.passenger.full_name }}</div>
+                    <div class="info-row"><span class="info-label">CNIC:</span> {{ ticket.passenger.cnic }}</div>
+                    <div class="info-row"><span class="info-label">Contact:</span> {{ ticket.passenger.phone }}</div>
+                </div>
+                
+                <div>
+                    <div class="section-title">Trip Details</div>
+                    <div class="info-row"><span class="info-label">Date:</span> {{ ticket.trip.date }}</div>
+                    <div class="info-row"><span class="info-label">Seat:</span> #{{ ticket.seat_number }}</div>
+                    <div class="info-row"><span class="info-label">Status:</span> {{ ticket.get_ticket_status_display }}</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 35px;">
+                <div class="section-title">Journey Stops</div>
+                <ul class="timeline-list">
+                    <li class="timeline-item origin"><strong>Origin:</strong> {{ ticket.origin.name }}</li>
+                    
+                    {% for stop in ticket.trip.route.rest_stops.all %}
+                        <li class="timeline-item"><small style="color: #7f8c8d;">Stop {{ stop.stop_order }}:</small> {{ stop.stop_name }}</li>
+                    {% empty %}
+                        <li class="timeline-item"><small style="color: #7f8c8d;">Direct Route (No intermediate stops)</small></li>
+                    {% endfor %}
+                    
+                    <li class="timeline-item dest"><strong>Destination:</strong> {{ ticket.destination.name }}</li>
+                </ul>
+            </div>
+
+            <div class="support-box">
+                <div class="section-title" style="border: none; padding: 0; margin-bottom: 10px;">Dedicated Customer Support</div>
+                {% if ticket.passenger.assigned_agent %}
+                    <div style="margin-bottom: 5px;">Your assigned support agent is <strong>{{ ticket.passenger.assigned_agent.user.full_name }}</strong>.</div>
+                    <div>For queries regarding this trip, contact them at <strong>{{ ticket.passenger.assigned_agent.user.phone|default:"the main terminal helpline" }}</strong>.</div>
+                {% else %}
+                    <div style="color: #7f8c8d;">Assigned terminal support will contact you prior to departure if there are any schedule changes.</div>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+    <div class="action-links">
+        <a href="{% url 'home' %}" class="btn-home">Return to Home</a>
+    </div>
+</div>
+
+{% endblock %}

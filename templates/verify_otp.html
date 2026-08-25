@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card" style="max-width: 400px; margin: 40px auto; text-align: center;">
+    <h2>Security Verification</h2>
+    <p style="color: var(--text-muted); font-size: 14px;">We sent a 6-digit verification code to <strong>{{ email }}</strong></p>
+    <form method="post" style="margin-top: 20px;">
+        {% csrf_token %}
+        <div class="form-group">
+            <input type="text" name="otp_code" placeholder="000000" maxlength="6" required autofocus style="text-align: center; font-size: 24px; letter-spacing: 5px;">
+        </div>
+        <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 15px;">Verify & Confirm Booking</button>
+    </form>
+</div>
+{% endblock %}

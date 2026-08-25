@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 25px; border-bottom: 1px solid var(--border-gray); padding-bottom: 15px;">
+    <div>
+        <h2 style="margin: 0;">Route Manager Portal</h2>
+        <span style="color: var(--text-muted); font-size: 14px;">Conductor: {{ user.full_name }}</span>
+    </div>
+</div>
+
+<div class="flex-row">
+    <!-- Active Trips & History -->
+    <div class="flex-col" style="flex: 2; display: flex; flex-direction: column; gap: 20px;">
+        
+        <!-- Active Trips -->
+        <div class="card" style="margin-bottom: 0;">
+            <h4 style="margin-bottom: 15px;">My Assigned Trips</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Route</th>
+                        <th>Date / Time</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                   {% for trip in active_trips %}
+                    <tr>
+                        <td><strong>{{ trip.route.route_number }}</strong><br><small style="color: var(--text-muted);">{{ trip.route.origin }} to {{ trip.route.destination }}</small></td>
+                        <td>{{ trip.date }}<br><small style="color: var(--text-muted);">{{ trip.departure_time|time:"g:i A" }}</small></td>
+                        <td><span style="color: var(--primary-navy); font-weight: bold; font-size: 12px;">{{ trip.get_status_display }}</span></td>
+                        <td style="text-align: right; white-space: nowrap;">
+                            <a href="{% url 'create_trip_log' trip.id %}" class="btn btn-danger" style="font-size: 11px; padding: 5px 10px;">Emergency Alert</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No upcoming trips assigned.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!--My Logged Expenses -->
+        <div class="card" style="margin-bottom: 0;">
+            <h4 style="margin-bottom: 15px;">My Logged Expenses</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Trip Route</th>
+                        <th>Expense Type</th>
+                        <th style="text-align: right;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exp in my_expenses %}
+                    <tr>
+                        <td>{{ exp.date_logged|date:"M d, g:i A" }}</td>
+                        <td>{{ exp.trip.route.route_number }}</td>
+                        <td>{{ exp.get_expense_type_display }}</td>
+                        <td style="text-align: right; color: var(--danger); font-weight: bold;">Rs. {{ exp.amount }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">You have not logged any expenses yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card" style="margin-bottom: 0;">
+            <h4 style="margin-bottom: 15px;">My Tracking History</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Location Pinged</th>
+                        <th>Trip Route</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ping in my_pings %}
+                    <tr>
+                        <td>{{ ping.timestamp|date:"M d, g:i A" }}</td>
+                        <td><strong style="color: var(--success);">{{ ping.location_name }}</strong></td>
+                        <td>{{ ping.trip.route.route_number }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" style="text-align: center; color: var(--text-muted);">You have not logged any waypoints yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- Fleet Actions -->
+    <div class="flex-col" style="flex: 1; display: flex; flex-direction: column; gap: 20px;">
+        
+        <!-- Action 1: Live Tracking Logger -->
+        <div class="card" style="margin-bottom: 0; border-top: 4px solid var(--success);">
+            <h4 style="margin-bottom: 15px;">Log Rest Stop / Location</h4>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="add_tracking" value="1">
+                <div class="form-group">
+                    <label>Select Active Trip</label>
+                    <select name="track_trip_id" required>
+                        <option value="">-- Choose Trip --</option>
+                        {% for trip in active_trips %}
+                            <option value="{{ trip.id }}">Trip #{{ trip.id }} - {{ trip.route.route_number }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Current Location (e.g., Bhera Rest Area)</label>
+                    <input type="text" name="location_name" placeholder="Enter highway or rest stop name" required>
+                </div>
+                <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 5px;">Ping Live Location</button>
+            </form>
+        </div>
+
+        <!-- Action 2: Expense Logger -->
+        <div class="card" style="margin-bottom: 0; border-top: 4px solid var(--primary-navy);">
+            <h4 style="margin-bottom: 15px;">Log Trip Expense</h4>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="add_expense" value="1">
+                <div class="form-group">
+                    <label>Select Trip</label>
+                    <select name="trip_id" required>
+                        <option value="">-- Choose Trip --</option>
+                        {% for trip in active_trips %}
+                            <option value="{{ trip.id }}">Trip #{{ trip.id }} - {{ trip.route.route_number }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Expense Type</label>
+                    <select name="expense_type" required>
+                        {% for key, value in expense_types %}
+                            <option value="{{ key }}">{{ value }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Amount (Rs.)</label>
+                    <input type="number" name="amount" min="1" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Description / Receipt Details</label>
+                    <input type="text" name="description" placeholder="Optional notes...">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Submit Expense</button>
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

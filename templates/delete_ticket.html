@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 40px auto; border-top: 4px solid var(--danger);">
+    <h2 style="color: var(--danger);">Confirm Cancellation</h2>
+    <p style="margin-bottom: 30px;">Are you absolutely sure you want to cancel the ticket for <strong>{{ ticket.passenger.full_name }}</strong> (PNR: {{ ticket.pnr_number }})?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Yes, Cancel Ticket</button>
+        <a href="{% url 'view_bookings' %}" class="btn btn-outline" style="margin-left: 10px;">No, Go Back</a>
+    </form>
+</div>
+{% endblock %}

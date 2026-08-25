@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 25px; border-bottom: 1px solid var(--border-gray); padding-bottom: 15px;">
+    <div>
+        <h2 style="margin: 0;">Passenger Helpdesk Manifest</h2>
+        <span style="color: var(--text-muted); font-size: 14px;">Review and resolve service feedback, hardware defects, and customer reports.</span>
+    </div>
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-outline">&larr; Back to Dashboard</a>
+</div>
+
+<!--KPI COUNTERS -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px;">
+    <div class="card" style="text-align: center; margin-bottom: 0;">
+        <div style="font-size: 28px; font-weight: bold; color: var(--primary-navy);">{{ pending_count }}</div>
+        <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: bold;">Pending Complaints</div>
+    </div>
+    <div class="card" style="text-align: center; margin-bottom: 0;">
+        <div style="font-size: 28px; font-weight: bold; color: var(--success);">{{ resolved_count }}</div>
+        <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: bold;">Resolved Cases</div>
+    </div>
+</div>
+
+<div class="card" style="padding: 15px 20px; margin-bottom: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        
+        <!-- Filter Tabs -->
+        <div style="display: flex; gap: 10px;">
+            <a href="?status=pending{% if query %}&q={{ query }}{% endif %}" class="btn {% if status_filter == 'pending' %}btn-primary{% else %}btn-outline{% endif %}" style="font-size: 12px; padding: 6px 14px;">
+                Unresolved ({{ pending_count }})
+            </a>
+            <a href="?status=resolved{% if query %}&q={{ query }}{% endif %}" class="btn {% if status_filter == 'resolved' %}btn-primary{% else %}btn-outline{% endif %}" style="font-size: 12px; padding: 6px 14px;">
+                Resolved ({{ resolved_count }})
+            </a>
+            <a href="?status=all{% if query %}&q={{ query }}{% endif %}" class="btn {% if status_filter == 'all' %}btn-primary{% else %}btn-outline{% endif %}" style="font-size: 12px; padding: 6px 14px;">
+                All Feedback
+            </a>
+        </div>
+
+        <!-- Search Box -->
+        <form method="GET" style="display: flex; gap: 10px; margin: 0;">
+            <input type="hidden" name="status" value="{{ status_filter }}">
+            <input type="text" name="q" value="{{ query }}" placeholder="Search PNR, CNIC, or text..." style="width: 250px; padding: 6px 12px;">
+            <button type="submit" class="btn btn-outline" style="font-size: 12px; padding: 6px 14px;">Search</button>
+        </form>
+    </div>
+</div>
+
+<!-- COMPLAINTS TABLE -->
+<div class="card" style="padding: 0; width: 100%; overflow-x: auto;">
+    <table style="width: 100%;">
+        <thead>
+            <tr>
+                <th>Date Submitted</th>
+                <th>Passenger / CNIC</th>
+                <th>Category</th>
+                <th>PNR Reference</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th style="text-align: right;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in complaints %}
+            <tr>
+                <td style="white-space: nowrap;">{{ c.created_at|date:"M d, Y g:i A" }}</td>
+                <td>
+                    <strong>{{ c.ticket.passenger.full_name }}</strong><br>
+                    <small style="color: var(--text-muted);">{{ c.ticket.passenger.phone }}</small>
+                </td>
+                <td><strong>{{ c.get_category_display }}</strong></td>
+                <td>
+                    <a href="{% url 'view_bookings' %}?q={{ c.ticket.pnr_number }}">{{ c.ticket.pnr_number }}</a>
+                </td>
+                <td style="max-width: 320px; font-size: 13px;">
+                    {{ c.description }}
+                </td>
+                <td>
+                    {% if c.is_resolved %}
+                        <span style="background: #e2e8f0; color: var(--success); padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">RESOLVED</span>
+                    {% else %}
+                        <span style="background: #fee2e2; color: var(--danger); padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">PENDING</span>
+                    {% endif %}
+                </td>
+                <td style="text-align: right; white-space: nowrap;">
+                    {% if not c.is_resolved %}
+                    <form method="POST" style="margin: 0; display: inline;" onsubmit="return confirm('Mark this complaint as resolved and notify the passenger via email?');">
+                        {% csrf_token %}
+                        <input type="hidden" name="resolve_complaint" value="1">
+                        <input type="hidden" name="complaint_id" value="{{ c.id }}">
+                        <button type="submit" class="btn btn-primary" style="font-size: 11px; padding: 5px 10px;">Resolve & Email</button>
+                    </form>
+                    {% else %}
+                        <span style="color: var(--text-muted); font-size: 12px;">Completed</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 35px;">No complaints found for the selected criteria.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

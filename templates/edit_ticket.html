@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 style="margin-bottom: 20px;">Edit Booking: {{ ticket.pnr_number }}</h2>
+
+{% if ticket_form.non_field_errors %}
+<div class="alert alert-error"><strong>Seating Rule Error:</strong> {{ ticket_form.non_field_errors }}</div>
+{% endif %}
+{% if passenger_form.non_field_errors %}
+<div class="alert alert-error">{{ passenger_form.non_field_errors }}</div>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+    <div class="flex-row">
+        <div class="card flex-col">
+            <h4 style="color: var(--text-muted); border-bottom: 1px solid var(--border-gray); padding-bottom: 10px;">Passenger Information</h4>
+            <div class="form-group">
+                {{ passenger_form.as_p }}
+            </div>
+        </div>
+        <div class="card flex-col">
+            <h4 style="color: var(--text-muted); border-bottom: 1px solid var(--border-gray); padding-bottom: 10px;">Trip & Seat Allocation</h4>
+            <div class="form-group">
+                {{ ticket_form.as_p }}
+            </div>
+        </div>
+    </div>
+    <div style="margin-top: 20px;">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="{% url 'view_bookings' %}" class="btn btn-outline" style="margin-left: 10px;">Cancel</a>
+    </div>
+</form>
+{% endblock %}

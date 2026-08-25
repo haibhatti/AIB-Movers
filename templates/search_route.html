@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Book a Ticket</h2>
+
+<div class="card" style="max-width: 600px;">
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            {{ form.as_p }}
+        </div>
+        <button type="submit" class="btn btn-primary">Search Buses</button>
+    </form>
+</div>
+
+{% if fares is not None %}
+    {% if fares %}
+        <h4 style="margin-top: 30px; margin-bottom: 15px;">Available Trips</h4>
+        
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            {% for fare in fares %}
+            <div class="card flex-row" style="align-items: center; justify-content: space-between; padding: 15px 20px; margin-bottom: 0;">
+                
+                <div>
+                    <h5 style="margin-bottom: 5px;">{{ fare.trip.route.route_number }} - {{ fare.trip.date }}</h5>
+                    <div style="font-size: 13px; color: var(--text-muted);">
+                        Departure: 
+                        {% if fare.segment_departure_time %}
+                            {{ fare.segment_departure_time }}
+                        {% else %}
+                            {{ fare.trip.departure_time|time:"g:i A" }}
+                        {% endif %} 
+                        &nbsp;|&nbsp; 
+                        
+                        Arrival: 
+                        {% if fare.segment_arrival_time %}
+                            {{ fare.segment_arrival_time }}
+                        {% else %}
+                            {{ fare.trip.arrival_time|time:"g:i A" }}
+                        {% endif %} 
+                        &nbsp;|&nbsp; 
+                        
+                        Fare: Rs. {{ fare.price }}
+                    </div>
+                </div>
+
+                <div>
+                    <a href="{% url 'book_ticket_step_1' fare.trip.id %}" class="btn btn-success">Select Seats</a>
+                </div>
+                
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-warning" style="max-width: 600px;">No trips available for the selected route.</div>
+    {% endif %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,19 @@
+# Python Virtual Environment folders
+env/
+venv/
+.env/
+
+# Secret Credentials & Environment Variables (CRITICAL!)
+.env
+
+# Local Database
+db.sqlite3
+
+# Python Cache & Bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd    
+
+# User Uploaded Files
+media/

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIB Movers</title>
+    <style>
+.navbar-brand { 
+    margin-left: 0 !important; 
+}
+
+input[type="number"], textarea { 
+    width: 100%; 
+    padding: 10px 12px; 
+    border: 1px solid var(--border-gray); 
+    border-radius: 6px; 
+    box-sizing: border-box; 
+    font-family: inherit; 
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input[type="number"]:focus, textarea:focus { 
+    outline: none; 
+    border-color: var(--primary-navy); 
+    box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1); 
+}
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; align-items: flex-start; padding: 15px; }
+            .navbar div { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+            .navbar a { margin-left: 0; margin-right: 15px; font-size: 12px; }
+            .flex-row { flex-direction: column; }
+            .kpi-grid { grid-template-columns: 1fr !important; }
+            .card { padding: 15px; }
+        }
+
+        :root {
+            --primary-navy: #0f172a; 
+            --primary-hover: #1e293b;
+            --bg-light: #f8fafc;
+            --border-gray: #e2e8f0;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #ca8a04;
+        }
+
+        body { 
+            background: var(--bg-light); 
+            font-family: 'Inter', sans-serif; 
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased; 
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+
+        .navbar { 
+            background: var(--primary-navy); 
+            padding: 15px 30px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .navbar a { 
+            color: #cbd5e0; 
+            text-decoration: none; 
+            margin-left: 20px; 
+            font-size: 13px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: color 0.2s ease; 
+        }
+        .navbar a:hover { color: white; }
+        .navbar-brand { font-weight: 700; font-size: 18px; color: white !important; letter-spacing: 1px; }
+
+        h1, h2, h3, h4, h5 { color: var(--primary-navy); margin-top: 0; font-weight: 700; }
+        
+        .card { 
+            background: white; 
+            border: 1px solid var(--border-gray); 
+            padding: 25px; 
+            margin-bottom: 20px; 
+            border-radius: 8px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease; 
+        }
+        .card:hover {
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .flex-row { display: flex; gap: 20px; flex-wrap: wrap; }
+        .flex-col { flex: 1; min-width: 300px; }
+
+        /* Forms */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: 600; font-size: 12px; margin-bottom: 6px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        input[type="text"], input[type="password"], input[type="email"], select { 
+            width: 100%; 
+            padding: 10px 12px; 
+            border: 1px solid var(--border-gray); 
+            border-radius: 6px;
+            box-sizing: border-box; 
+            font-family: inherit;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        input:focus, select:focus { 
+            outline: none; 
+            border-color: var(--primary-navy); 
+            box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1); 
+        }
+
+        .btn { 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 6px;
+            cursor: pointer; 
+            font-weight: 600; 
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            transition: all 0.2s ease; 
+        }
+        .btn-primary { background: var(--primary-navy); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { filter: brightness(1.1); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { filter: brightness(1.1); }
+        .btn-outline { background: transparent; border: 1px solid var(--text-muted); color: var(--text-main); }
+        .btn-outline:hover { background: var(--bg-light); }
+
+        table { width: 100%; border-collapse: collapse; background: white; border: 1px solid var(--border-gray); border-radius: 8px; overflow: hidden; }
+        th, td { padding: 14px 15px; text-align: left; border-bottom: 1px solid var(--border-gray); font-size: 13px; }
+        th { background: #f1f5f9; color: var(--text-muted); text-transform: uppercase; font-size: 11px; cursor: pointer; font-weight: 700; letter-spacing: 0.5px; } 
+        tr:hover td { background-color: #f8fafc; } 
+        .alert { padding: 15px; border-left: 4px solid; margin-bottom: 20px; background: white; font-size: 14px; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .alert-error { border-color: var(--danger); color: var(--danger); }
+        .alert-success { border-color: var(--success); color: var(--success); }
+        .alert-warning { border-color: var(--warning); color: #975a16; }
+    </style>
+</head>
+<body>
+   <nav class="navbar">
+        <a class="navbar-brand" href="{% url 'home' %}">AIB Movers</a>
+        <div>
+            {% if not user.is_authenticated %}
+                <a href="{% url 'search_route' %}">New Booking</a>
+                <a href="{% url 'passenger_support' %}">Helpdesk</a> <!-- Added -->
+            {% elif user.passenger_profile %}
+                <a href="{% url 'search_route' %}">New Booking</a>
+                <a href="{% url 'passenger_support' %}">Helpdesk</a> <!-- Added -->
+            {% elif user.employee_profile.role == 'ADMIN' or user.employee_profile.role == 'AGENT' %}
+                <a href="{% url 'search_route' %}">New Booking</a>
+            {% endif %}
+            
+            <a href="{% url 'track_booking' %}">Track Booking</a>
+
+            {% if user.is_authenticated %}
+                {% if user.employee_profile %}
+                    {% if user.employee_profile.role == 'ADMIN' %}
+                        <a href="{% url 'fleet_management' %}">Fleet Tracker</a>
+                    {% endif %}
+                    <a href="{% url 'dashboard' %}">Staff Dashboard</a>
+                {% elif user.passenger_profile %}
+                    <a href="{% url 'passenger_profile' %}">My Profile</a>
+                {% endif %}
+                <a href="{% url 'logout' %}">Logout</a>
+            {% else %}
+                <a href="{% url 'passenger_login' %}">Passenger Login</a>
+                <span style="color: var(--text-muted); margin-left: 20px;">|</span>
+                <a href="{% url 'login' %}">Staff Login</a>
+            {% endif %}
+        </div>
+    </nav>
+    
+    <div class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </div>
+    
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
+            const comparer = (idx, asc) => (a, b) => ((v1, v2) => 
+                v1 !== '' && v2 !== '' && !isNaN(v1.replace(/[^0-9.-]+/g, '')) && !isNaN(v2.replace(/[^0-9.-]+/g, '')) ? 
+                v1.replace(/[^0-9.-]+/g, '') - v2.replace(/[^0-9.-]+/g, '') : 
+                v1.toString().localeCompare(v2)
+            )(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
+
+            document.querySelectorAll('th').forEach(th => th.addEventListener('click', (() => {
+                const table = th.closest('table');
+                const tbody = table.querySelector('tbody');
+                const asc = th.asc = !th.asc;
+                table.querySelectorAll('th').forEach(h => h.innerHTML = h.innerHTML.replace(/( ▲| ▼)/g, ''));
+                th.innerHTML += asc ? ' ▲' : ' ▼';
+                Array.from(tbody.querySelectorAll('tr'))
+                    .sort(comparer(Array.from(th.parentNode.children).indexOf(th), asc))
+                    .forEach(tr => tbody.appendChild(tr));
+            })));
+        });
+    </script>
+</body>
+</html>

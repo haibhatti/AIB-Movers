@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    
+    .seat-label {
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        height: 50px; 
+        border: 1px solid var(--border-gray); 
+        font-weight: bold; 
+        margin: 0;
+    }
+    .available-seat {
+        cursor: pointer; 
+        background: white; 
+        color: var(--primary-navy);
+    }
+    .booked-seat {
+        cursor: not-allowed; 
+        background: #e2e8f0; 
+        color: #a0aec0;
+    }
+</style>
+
+<h2>Select Logistics: {{ trip.route.route_number }}</h2>
+<p style="color: var(--text-muted);">{{ origin.name }} to {{ destination.name }} | Fare: Rs. {{ fare }}</p>
+
+{% if ticket_form.non_field_errors %}
+<div class="alert alert-error"><strong>Booking Error:</strong> {{ ticket_form.non_field_errors }}</div>
+{% endif %}
+{% if passenger_form.non_field_errors %}
+<div class="alert alert-error">{{ passenger_form.non_field_errors }}</div>
+{% endif %}
+
+{% if not user.is_authenticated %}
+    <div style="background: #e2e8f0; padding: 15px; margin-bottom: 20px; border-left: 4px solid var(--primary-navy); font-size: 13px;">
+        <strong>Already traveled with us?</strong> <a href="{% url 'passenger_login' %}" style="color: var(--primary-navy); font-weight: bold; text-decoration: underline;">Log in here</a> to auto-fill your details and book instantly!
+    </div>
+{% elif user.passenger_profile %}
+    <div style="background: #e2e8f0; padding: 15px; margin-bottom: 20px; border-left: 4px solid var(--success); font-size: 13px;">
+        <strong>Welcome back, {{ user.full_name }}!</strong> Your profile data has been automatically loaded.
+    </div>
+{% endif %}
+
+<form method="POST" id="bookingForm" action="{% url 'book_ticket_step_1' trip.id %}">
+    {% csrf_token %}
+    
+    <div class="flex-row">
+        <!-- PASSENGER DETAILS -->
+        <div class="card flex-col">
+            <h4>Passenger Information</h4>
+            
+            <div class="form-group">
+                <label>Full Name</label>
+                {{ passenger_form.full_name }}
+                <span class="error-text">{{ passenger_form.full_name.errors }}</span>
+            </div>
+            
+            <div class="form-group">
+                <label>CNIC Number (35202-1234567-1)</label>
+                {{ passenger_form.cnic }}
+                <span class="error-text">{{ passenger_form.cnic.errors }}</span>
+            </div>
+            
+            <div class="flex-row" style="gap: 15px;">
+                <div class="form-group" style="flex: 1;">
+                    <label style="color: var(--danger);">Gender (Required)</label>
+                    {{ passenger_form.gender }}
+                    <span class="error-text">{{ passenger_form.gender.errors }}</span>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Phone Number</label>
+                    {{ passenger_form.phone }}
+                    <span class="error-text">{{ passenger_form.phone.errors }}</span>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Email Address</label>
+                {{ passenger_form.email }}
+                <span class="error-text">{{ passenger_form.email.errors }}</span>
+            </div>
+
+            <h4 style="margin-top: 30px;">Emergency & Address</h4>
+            
+            <div class="form-group">
+                <label>Emergency Contact Name</label>
+                {{ passenger_form.emergency_contact_name }}
+                <span class="error-text">{{ passenger_form.emergency_contact_name.errors }}</span>
+            </div>
+            <div class="form-group">
+                <label>Emergency Phone</label>
+                {{ passenger_form.emergency_contact_phone }}
+                <span class="error-text">{{ passenger_form.emergency_contact_phone.errors }}</span>
+            </div>
+            <div class="flex-row" style="gap: 15px;">
+                <div class="form-group" style="flex: 2;">
+                    <label>Full Address</label>
+                    {{ passenger_form.address }}
+                    <span class="error-text">{{ passenger_form.address.errors }}</span>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Blood Group</label>
+                    {{ passenger_form.blood_group }}
+                    <span class="error-text">{{ passenger_form.blood_group.errors }}</span>
+                </div>
+            </div>
+
+            <h4 style="margin-top: 30px;">Payment Logistics</h4>
+            <div class="form-group">
+                <label>Payment Method</label>
+                <select name="payment_method">
+                    <option value="TERMINAL">Cash at Terminal Counter</option>
+                    <option value="ONLINE">Online Banking / Debit Card Transfer</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Sender's Bank/Card Account Name (If paying online)</label>
+                <input type="text" name="sender_account_name" placeholder="e.g., Faris Khan (Optional for cash)">
+            </div>
+            
+            <div style="background: #edf2f7; padding: 15px; border-left: 4px solid var(--primary-navy); margin-top: 20px; font-size: 13px;">
+                <strong style="display: block; margin-bottom: 5px;">Online Banking / Transfer Details:</strong>
+                {% if payment_config %}
+                    Payment Services: <strong>{{ payment_config.payment_option_1|default:"Bank Transfer" }}{% if payment_config.payment_option_2 %} / {{ payment_config.payment_option_2 }}{% endif %}</strong><br>
+                    Account Title: <strong>{{ payment_config.account_title }}</strong><br>
+                    Account Number: <strong>{{ payment_config.account_number }}</strong><br>
+                    {% if payment_config.instructions %}
+                        <span style="color: var(--text-muted); display: block; margin-top: 8px;">{{ payment_config.instructions }}</span>
+                    {% else %}
+                        <span style="color: var(--text-muted); display: block; margin-top: 8px;">Transfer your fare and verify your deposit with the terminal staff.</span>
+                    {% endif %}
+                {% else %}
+                    <span style="color: var(--danger);">Online payment details have not been configured by the administrator yet.</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- SEAT SELECTION -->
+        <div class="card flex-col" style="min-width: 350px;">
+            <h4>Seat Allocation</h4>
+            {{ ticket_form.trip.as_hidden }}
+            <span class="error-text" style="margin-bottom: 15px;">{{ ticket_form.seat_number.errors }}</span>
+
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 300px; margin: 0 auto;">
+                {% for seat in total_seats_range %}
+                    <label class="seat-label {% if seat in booked_seats %}booked-seat{% else %}available-seat{% endif %}">
+                        <input type="radio" name="seat_number" value="{{ seat }}" {% if seat in booked_seats %}disabled{% endif %} style="display: none;">
+                        {{ seat }}
+                    </label>
+                {% endfor %}
+            </div>
+            
+            <div style="margin-top: 30px; text-align: center;">
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Finalize Allocation</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    const availableSeats = document.querySelectorAll('.available-seat');
+
+    availableSeats.forEach(function(seatElement) {
+        
+      
+        seatElement.addEventListener('click', function() {
+        
+            availableSeats.forEach(function(s) { 
+                s.style.background = 'white'; 
+                s.style.color = 'var(--primary-navy)';
+            });
+            this.style.background = 'var(--success)';
+            this.style.color = 'white';
+
+            this.querySelector('input[type="radio"]').checked = true;
+        });
+    });
+
+    document.getElementById('bookingForm').addEventListener('submit', function(event) {
+        if (!document.querySelector('input[name="seat_number"]:checked')) {
+            event.preventDefault();
+            alert('SYSTEM HALT: Please select an available seat from the grid before proceeding.');
+        }
+    });
+</script>
+{% endblock %}

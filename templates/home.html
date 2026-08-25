@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .erp-header {
+        background: linear-gradient(135deg, var(--primary-navy) 0%, #2a4365 100%);
+        border-radius: 8px;
+        padding: 40px 30px;
+        margin-bottom: 30px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 20px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .erp-header-content {
+        max-width: 600px;
+    }
+    .erp-title {
+        font-size: 32px;
+        font-weight: 800;
+        margin-bottom: 10px;
+        letter-spacing: -0.5px;
+        color: white;
+    }
+    .erp-subtitle {
+        font-size: 14px;
+        color: #e2e8f0;
+        margin: 0;
+        line-height: 1.6;
+    }
+    .erp-actions {
+        display: flex;
+        gap: 15px;
+    }
+    .btn-header-primary {
+        background: var(--success);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 14px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: 1px solid var(--success);
+    }
+    .btn-header-primary:hover {
+        background: #2f855a;
+        transform: translateY(-1px);
+        color: white;
+    }
+    .btn-header-secondary {
+        background: transparent;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 14px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: 1px solid rgba(255,255,255,0.4);
+    }
+    .btn-header-secondary:hover {
+        background: rgba(255,255,255,0.1);
+        border-color: white;
+        color: white;
+    }
+</style>
+
+<div class="erp-header">
+    <div class="erp-header-content">
+        <h1 class="erp-title">AIB Movers</h1>
+        <p class="erp-subtitle">Centralized terminal operations and fleet management. Select a scheduled route below to initiate a booking, or access the staff portal for dispatch and analytics.</p>
+    </div>
+    <div class="erp-actions">
+        {% if user.is_authenticated %}
+            <a href="{% url 'dashboard' %}" class="btn-header-primary">Access Dashboard</a>
+        {% else %}
+            <a href="{% url 'login' %}" class="btn-header-secondary">Staff Login</a>
+            <a href="{% url 'passenger_login' %}" class="btn-header-secondary">Passenger Login</a>
+        {% endif %}
+    </div>
+</div>
+
+{% if user.is_authenticated and user.employee_profile.role == 'DRIVER' or user.is_authenticated and user.employee_profile.role == 'CONDUCTOR' %}
+    <div class="alert alert-info text-center mt-5" style="border-radius: 8px; padding: 30px; background-color: #f8fafc; border: 1px solid #e2e8f0;">
+        <h4 style="color: var(--primary-navy); margin-bottom: 10px;"><i class="fas fa-shield-alt"></i> Access Restricted</h4>
+        <p style="color: var(--text-muted);">The public ticketing engine is restricted for field staff to optimize server performance.</p>
+        <a href="{% url 'dashboard' %}" class="btn btn-primary mt-2">Go to My Dashboard</a>
+    </div>
+{% else %}
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px;">
+        <div>
+            <h2 style="margin: 0;">Live Terminal Schedule</h2>
+            <span style="color: var(--text-muted); font-size: 14px;">Real-time departures and fleet availability.</span>
+        </div>
+    </div>
+
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <table>
+            <thead style="background: #edf2f7;">
+                <tr>
+                    <th>Route details</th>
+                    <th>Travel Date</th>
+                    <th>Departure</th>
+                    <th>Fleet</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for trip in upcoming_trips %}
+                <tr>
+                    <td><strong>{{ trip.route.route_number }}</strong><br><small style="color: var(--text-muted);">{{ trip.route.origin }} to {{ trip.route.destination }}</small></td>
+                    <td>{{ trip.date }}</td>
+                    <td><span style="background: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 11px; color: var(--primary-navy);">{{ trip.departure_time|time:"g:i A" }}</span></td>
+                    <td>{{ trip.bus.bus_name }}</td>
+                    <td style="text-align: right;"><a href="{% url 'book_ticket_step_1' trip.id %}" class="btn btn-primary" style="padding: 6px 16px; font-size: 12px;">Book Seat</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px;">No upcoming trips scheduled at the terminal.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="margin-bottom: 25px; border-bottom: 1px solid var(--border-gray); padding-bottom: 15px;">
+    <h2>Complete Staff Directory</h2>
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-outline">&larr; Back to Dashboard</a>
+</div>
+
+<div class="card" style="padding: 0;">
+    <table>
+        <thead>
+            <tr>
+                <th>Employee Name</th>
+                <th>Role</th>
+                <th>Performance / Activity</th>
+                <th style="text-align: right;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for emp in employees %}
+            <tr>
+                <td><strong>{{ emp.user.full_name }}</strong><br><small style="color: var(--text-muted);">CNIC: {{ emp.cnic }}</small></td>
+                <td><span style="font-weight: bold; font-size: 12px;">{{ emp.get_role_display }}</span></td>
+                <td>
+                    {% if emp.role == 'AGENT' %}
+                        <span>Tickets Sold: <strong>{{ emp.total_tickets }}</strong></span><br>
+                        <span style="color: var(--success); font-weight: bold;">Revenue: Rs. {{ emp.revenue|default:"0.00" }}</span>
+                    {% elif emp.role == 'DRIVER' %}
+                        <span style="color: var(--text-muted);">Fleet Operations (Driver)</span>
+                    {% elif emp.role == 'CONDUCTOR' %}
+                        <span style="color: var(--text-muted);">Route & Expense Management</span>
+                    {% elif emp.role == 'SUPPORT' %}
+                        <span style="color: var(--text-muted);">Customer Support Queue</span>
+                    {% else %}
+                        <span style="color: var(--text-muted);">Administrative Access</span>
+                    {% endif %}
+                </td>
+                <td style="text-align: right;">
+                    <a href="{% url 'employee_performance' emp.id %}" class="btn btn-primary" style="font-size: 11px; padding: 5px 10px;">View Report</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
