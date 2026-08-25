@@ -13,6 +13,6 @@ Developed as my **first professional internship project**, AIB Movers is a compr
 
 ## 🛠 Technical Stack
 * **Backend:** Django (Python), Relational SQL Mapping
-* **Frontend:** Pure CSS architecture (No Bootstrap), Vanilla JS
+* **Frontend:** HTML , CSS and Bootstrap, Vanilla JS
 * **Analytics:** Google Charts API via secure `json_script` templating
 * **Task Management:** Python `threading` for non-blocking email dispatches
